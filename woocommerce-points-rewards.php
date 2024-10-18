@@ -27,6 +27,10 @@ class WooCommercePointsRewards {
         // Interface d'administration : Réglages du plugin
         add_action('admin_menu', array($this, 'menu'));
         add_action('admin_init', array($this, 'wcp_rewards_register_settings'));
+
+        // Bonus : Ajout d'un shortcode + fichier css
+        add_action('wp_enqueue_scripts', array($this, 'custom_products_enqueue_styles'));
+        add_shortcode('custom_products', array($this, 'custom_products_shortcode'));
     }
 
     // Ajouter une page de réglage au menu d'administration
@@ -375,6 +379,62 @@ class WooCommercePointsRewards {
                     window.location.replace("http://wp-2.local/my-account/");
                 </script>';
         }
+    }
+
+    public function custom_products_shortcode($atts): string
+    {
+        // Définir les attributs par défaut
+        $atts = shortcode_atts(
+            array(
+                'limit' => 5,       // Nombre de produits à afficher
+                'category' => '',   // Catégorie des produits
+            ),
+            $atts,
+            'custom_products'
+        );
+
+        // Arguments de la requête WP_Query
+        $args = array(
+            'post_type' => 'product',
+            'posts_per_page' => $atts['limit'],
+            'product_cat' => $atts['category'],
+            'orderby' => 'date',
+            'order' => 'DESC',
+        );
+
+        // Requête pour récupérer les produits
+        $query = new WP_Query($args);
+
+        // Initialiser une variable pour stocker le contenu
+        $output = '<div class="custom-products">';
+
+        // Vérifier si des produits existent
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                global $product;
+
+                // Ajouter le produit à la sortie (titre, image, lien)
+                $output .= '<div class="product">';
+                $output .= '<a href="' . get_permalink() . '">' . get_the_post_thumbnail(get_the_ID(), 'medium') . '</a>';
+                $output .= '<h2>' . get_the_title() . '</h2>';
+                $output .= '<p>' . $product->get_price_html() . '</p>';
+                $output .= '</div>';
+            }
+        } else {
+            $output .= '<p>Aucun produit trouvé.</p>';
+        }
+
+        // Réinitialiser la requête
+        wp_reset_postdata();
+
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    public function custom_products_enqueue_styles() {
+        wp_enqueue_style('custom-products-style', plugin_dir_url(__FILE__) . 'assets/css/app.css');
     }
 }
 

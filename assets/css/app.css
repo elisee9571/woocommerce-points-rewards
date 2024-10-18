@@ -1,0 +1,9 @@
+.custom-products {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+}
+
+.custom-products .product h2 {
+    margin-top: 15px;
+}
