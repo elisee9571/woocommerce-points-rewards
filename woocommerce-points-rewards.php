@@ -6,20 +6,23 @@
  * Author: Elisée Desmarest
 */
 
-if (!defined('ABSPATH')) {
+if (!defined('ABSPATH'))
+{
 	exit;
 }
 
-class WooCommercePointsRewards {
+class WooCommercePointsRewards
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         // Attribuer des points lorsque la commande a le statut "Terminée".
         add_action('woocommerce_order_status_completed', array($this, 'awardPoints'));
 
         /**
          * Afficher les points
-         * Utiliser les points
          * Afficher l'historique des points
+         * Utiliser les points
          * Expirer les points
          */
         add_action('woocommerce_account_dashboard', array($this, 'displayPoints'));
@@ -34,7 +37,8 @@ class WooCommercePointsRewards {
     }
 
     // Ajouter une page de réglage au menu d'administration
-    public function menu() {
+    public function menu(): void
+    {
         add_menu_page(
             'Points Rewards',                    // Titre de la page
             'Points Rewards',                    // Titre du menu
@@ -47,14 +51,17 @@ class WooCommercePointsRewards {
     }
 
     // Enregistrer les options
-    public function wcp_rewards_register_settings() {
+    public function wcp_rewards_register_settings(): void
+    {
          // Enregistre les paramètres
         register_setting('wcp_rewards_options_group', 'points_conversion_rate');
         register_setting('wcp_rewards_options_group', 'points_expiration_duration');
+
     }
 
     // Affiche la page du menu du plugin dans l'interface d'administration
-    public function menuPage() {
+    public function menuPage(): void
+    {
         ?>
         <div class="wrap">
             <h1>Bienvenue dans WooCommerce Points Rewards</h1>
@@ -86,7 +93,8 @@ class WooCommercePointsRewards {
         <?php
     }
 
-    private function sendNotification(int $userId, string $title, string $content) {
+    private function sendNotification(int $userId, string $title, string $content): void
+    {
         $userInfo = get_userdata($userId);
         $to = $userInfo->user_email;
         $subject = __($title, 'woocommerce');
@@ -110,7 +118,7 @@ class WooCommercePointsRewards {
         $halfPointsExpirationDuration = (int) ($pointsExpirationDuration / 2);
 
         $expirationDurationMonths = $pointsExpirationDuration * 30 * 24 * 60 * 60; // Environ 30 jours par mois
-        // $expirationDurationMonths = 5 * 60; // 5 min for testing
+
         $halfExpirationDurationMonths = $expirationDurationMonths / 2;
 
         // Vérification de la validité de lastUpdate
@@ -191,6 +199,8 @@ class WooCommercePointsRewards {
         // Déduire les points de l'utilisateur
         $newPoints = $currentPoints - $pointsRequired;
         update_user_meta($userId, 'reward_points', $newPoints);
+
+        // Mettre à jour la date d'utilisation des points
         update_user_meta($userId, 'last_points_update', current_time('timestamp'));
 
         // Ajouter l'entrée dans l'historique
@@ -264,7 +274,7 @@ class WooCommercePointsRewards {
         $points = (int) get_user_meta($userId, 'reward_points', true);
         
         $history = get_user_meta($userId, 'points_history', true) ?: [];
-        $lastFiveEntries = array_slice($history, -10);
+        $lastEntries = array_slice($history, -10);
         ?>
 
         <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
@@ -330,7 +340,7 @@ class WooCommercePointsRewards {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach (array_reverse($lastFiveEntries) as $entry): ?>
+                        <?php foreach (array_reverse($lastEntries) as $entry): ?>
                             <?php
                                 $date = new DateTime($entry['date']);
                                 $formattedDate = $date->format('d/m/Y');
@@ -363,8 +373,8 @@ class WooCommercePointsRewards {
                 case 20:
                     $pointsRequired = 200;
                     break;
-                case 30:
-                    $pointsRequired = 300;
+                case 40:
+                    $pointsRequired = 400;
                     break;
                 default:
                     wc_add_notice('Pourcentage de remise invalide.', 'error');
@@ -433,7 +443,8 @@ class WooCommercePointsRewards {
         return $output;
     }
 
-    public function custom_products_enqueue_styles() {
+    public function custom_products_enqueue_styles(): void
+    {
         wp_enqueue_style('custom-products-style', plugin_dir_url(__FILE__) . 'assets/css/app.css');
     }
 }
